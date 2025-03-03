@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithmic Music</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: black; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script>
+        // Tone.js Setup
+        const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        const notes = ["C4", "E4", "G4", "B4"]; // Initial melody
+        let melody = [...notes];
+
+        function playMelody() {
+            let now = Tone.now();
+            melody.forEach((note, i) => {
+                synth.triggerAttackRelease(note, "8n", now + i * 0.5);
+            });
+        }
+
+        function mutateMelody() {
+            melody = melody.map(note => {
+                return Math.random() < 0.3 ? getNearbyNote(note) : note;
+            });
+        }
+
+        function getNearbyNote(note) {
+            const scale = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
+            return scale[Math.floor(Math.random() * scale.length)];
+        }
+
+        // p5.js Visualization
+        let particles = [];
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            noStroke();
+            playMelody();
+            setInterval(() => {
+                mutateMelody();
+                playMelody();
+                particles.push(new Particle());
+            }, 4000);
+        }
+
+        function draw() {
+            background(0, 20);
+            particles.forEach(p => p.update());
+            particles = particles.filter(p => !p.isDead());
+        }
+
+        class Particle {
+            constructor() {
+                this.x = width / 2;
+                this.y = height / 2;
+                this.size = random(10, 50);
+                this.color = color(random(100, 255), random(50, 200), random(150, 255), 150);
+                this.vx = random(-2, 2);
+                this.vy = random(-2, 2);
+                this.lifespan = 255;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.lifespan -= 2;
+                fill(this.color);
+                ellipse(this.x, this.y, this.size);
+            }
+            isDead() {
+                return this.lifespan <= 0;
+            }
+        }
+    </script>
+</body>
+</html>
