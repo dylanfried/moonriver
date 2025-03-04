@@ -113,6 +113,7 @@
             noStroke();
             document.getElementById("startButton").addEventListener("click", () => {
                 document.getElementById("startButton").style.display = "none";
+                document.getElementById("letterContainer").style.display = "inline";
                 playMelody();
                 setInterval(() => {
                     mutateMelody();
@@ -144,5 +145,29 @@
             }
         }
     </script>
+
+<div id="letterContainer" style="display: none; position: absolute; top: 10%; left: 10%; width: 80%; height: 80%; color: white; font-size: 14px; font-family: Arial, sans-serif; line-height: 1.5; white-space: pre-wrap;">
+    <p id="letterText"></p>
+</div>
+
+<script>
+    const letterContent = `
+some of my earliest memories are hearing you sing moon river. it's what i hum when a lover or a child or anyone I feel protective over can't sleep. I know some of the words and I make up all of the ones I don't know. I've done it enough times that the song has taken on a full life of its own and - in my heart - I'm convinced that it's the real song. Every time I hear, I think of you and how lucky I am. 
+
+I wish that I wasn't sending you an electronic version of a birthday wish - but I hope you'll get a little kick out of this even if it isn't ideal. A little hug from me from afar until I'm back in physical presence for you.
+
+I wanted to make you something that would make you smile. That would be a reminder of the ways that we can make each other safe. And something that changes over time to places that we don't know. Something that is playful like you and willing to throw caution to the wind. Not always caring where it ends up, but knowing that life is worth living that way. 
+
+I love you so much. You are in me everywhere that I go and it is a gift to always know that. As I spend more time in new chapters of my life, I see more and more the ways that you've shaped me and how I relate to the people I love. And how I relate to myself and my own brain!
+
+More importantly, though, it's your birthday. It's a time to celebrate you. Not in relation to how you've shaped others, but just for you in who you are. You are powerful and strong. You're always the best at games, both in terms of winning and - more importantly - in terms of having fun. You are kind and generous. You are the smartest person I know. You have a mischevious smile and you bend the world around you. You paint beautifully and I love your harmonica playing. 
+
+Fuck the emotional stuff, though/ You're also just super fun and I thought you'd find this cool ;)
+Happy birthday mama! I can't wait to see you.
+Dylan
+    `;
+
+    document.getElementById("letterText").textContent = letterContent;
+</script>
 </body>
 </html>
