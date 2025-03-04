@@ -7,39 +7,47 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: black; transition: background 1s; }
+        body { margin: 0; overflow: hidden; background: black; }
         canvas { display: block; }
     </style>
 </head>
 <body>
     <button id="startButton" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 10px 20px; font-size: 20px;">Start Music</button>
     <script>
+        // Tone.js Setup
         const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        let particles = [];
+        
         const majorScales = {
             "C": ["C", "D", "E", "F", "G", "A", "B"],
-            "F": ["F", "G", "A", "Bb", "C", "D", "E"],
-            "G": ["G", "A", "B", "C", "D", "E", "F#"],
+            "C#": ["C#", "D#", "E#", "F#", "G#", "A#", "B#"],
             "D": ["D", "E", "F#", "G", "A", "B", "C#"],
-            "A": ["A", "B", "C#", "D", "E", "F#", "G#"]
+            "Eb": ["Eb", "F", "G", "Ab", "Bb", "C", "D"],
+            "E": ["E", "F#", "G#", "A", "B", "C#", "D#"],
+            "F": ["F", "G", "A", "Bb", "C", "D", "E"],
+            "F#": ["F#", "G#", "A#", "B", "C#", "D#", "E#"],
+            "G": ["G", "A", "B", "C", "D", "E", "F#"],
+            "Ab": ["Ab", "Bb", "C", "Db", "Eb", "F", "G"],
+            "A": ["A", "B", "C#", "D", "E", "F#", "G#"],
+            "Bb": ["Bb", "C", "D", "Eb", "F", "G", "A"],
+            "B": ["B", "C#", "D#", "E", "F#", "G#", "A#"]
         };
         
         let melody = [
-            { note: "C4", duration: "4n", volume: -5 },
-            { note: "E4", duration: "4n", volume: -5 },
             { note: "G4", duration: "4n", volume: -5 },
+            { note: "D5", duration: "4n", volume: -5 },
+            { note: "C5", duration: "4n", volume: -5 },
+            { note: "B4", duration: "4n", volume: -5 },
             { note: "A4", duration: "4n", volume: -5 },
             { note: "G4", duration: "4n", volume: -5 },
-            { note: "F4", duration: "4n", volume: -5 },
-            { note: "E4", duration: "4n", volume: -5 },
-            { note: "D4", duration: "4n", volume: -5 }
+            { note: "F4", duration: "4n", volume: -5 }
         ];
-        
-        let particles = [];
-        
+
         async function playMelody() {
             await Tone.start();
             Tone.Transport.cancel();
             let now = Tone.now();
+            particles = [];
             melody.forEach((noteObj, i) => {
                 let volume = Math.max(-10, Math.min(-3, noteObj.volume));
                 synth.triggerAttackRelease(noteObj.note, noteObj.duration, now + i * 0.5, Tone.dbToGain(volume));
@@ -48,9 +56,20 @@
                 }, now + i * 0.5);
             });
             Tone.Transport.start();
-            updateBackgroundColor();
         }
-        
+
+        function mutateMelody() {
+            let key = detectKey();
+            melody = melody.map(noteObj => {
+                if (Math.random() < 0.7) return noteObj; // Most notes remain unchanged
+                return {
+                    note: getKeyConstrainedNote(noteObj.note, key),
+                    duration: getRandomDuration(),
+                    volume: getRandomVolume()
+                };
+            });
+        }
+
         function detectKey() {
             let noteCounts = {};
             melody.forEach(noteObj => {
@@ -62,13 +81,22 @@
                 return count > (majorScales[bestKey]?.filter(n => noteCounts[n]).length || 0) ? currentKey : bestKey;
             }, "C");
         }
-        
-        function updateBackgroundColor() {
-            let key = detectKey();
-            let consonance = melody.filter(n => majorScales[key].includes(n.note.replace(/\d/, ""))).length;
-            let dissonance = melody.length - consonance;
-            let intensity = map(dissonance / melody.length, 0, 1, 0, 255);
-            document.body.style.background = `rgb(${intensity}, 0, ${255 - intensity})`;
+
+        function getKeyConstrainedNote(note, key) {
+            let options = majorScales[key].map(n => n + "4");
+            let index = options.indexOf(note);
+            let shift = Math.random() < 0.7 ? 1 : 2;
+            let newIndex = Math.max(0, Math.min(options.length - 1, index + (Math.random() < 0.5 ? -shift : shift)));
+            return options[newIndex];
+        }
+
+        function getRandomDuration() {
+            const durations = ["8n", "4n", "16n", "8t"];
+            return durations[Math.floor(Math.random() * durations.length)];
+        }
+
+        function getRandomVolume() {
+            return Math.max(-10, Math.min(-3, Math.floor(Math.random() * -10) - 5));
         }
 
         function setup() {
@@ -78,13 +106,14 @@
                 document.getElementById("startButton").style.display = "none";
                 playMelody();
                 setInterval(() => {
+                    mutateMelody();
                     playMelody();
                 }, 4000);
             });
         }
 
         function draw() {
-            background(0, 0, 0, 20);
+            background(0);
             particles.forEach(p => p.update());
             particles = particles.filter(p => !p.isDead());
         }
@@ -93,18 +122,13 @@
             constructor(noteObj) {
                 this.x = random(width);
                 this.y = random(height);
-                this.size = map(noteObj.volume, -10, -3, 5, 50);
-                this.color = color(map(noteObj.note.charCodeAt(0), 65, 71, 0, 255), random(255), 255, 150);
-                this.vx = random(-1, 1);
-                this.vy = random(-1, 1);
-                this.lifespan = map(noteObj.duration.length, 1, 3, 50, 255);
+                this.size = map(Tone.dbToGain(noteObj.volume), 0, 1, 5, 20);
+                this.lifespan = 255;
             }
             update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.lifespan -= 2;
-                fill(this.color);
+                fill(255, this.lifespan);
                 ellipse(this.x, this.y, this.size);
+                this.lifespan -= 2;
             }
             isDead() {
                 return this.lifespan <= 0;
